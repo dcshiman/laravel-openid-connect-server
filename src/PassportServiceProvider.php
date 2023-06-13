@@ -9,6 +9,7 @@ use Idaas\OpenID\Repositories\ClaimRepositoryInterface;
 use Idaas\OpenID\Repositories\UserRepositoryInterface;
 use Idaas\OpenID\ResponseTypes\BearerTokenResponse;
 use Idaas\OpenID\Session;
+use Idaas\Passport\Bridge\AccessToken;
 use Idaas\Passport\Bridge\AccessTokenRepository;
 use Idaas\OpenID\Repositories\AccessTokenRepositoryInterface;
 use Idaas\Passport\Bridge\ClaimRepository;
@@ -46,15 +47,18 @@ class PassportServiceProvider extends LaravelPassportServiceProvider
     {
         Passport::useClientModel($this->getClientModel());
         Passport::usePersonalAccessClientModel($this->getPersonalAccessClientModel());
+        Passport::useAccessTokenEntity(AccessToken::class);
         // Passport::useTokenModel()
 
         parent::boot();
 
         $this->app->bindIf(ClaimRepositoryInterface::class, ClaimRepository::class);
         $this->app->bindIf(UserRepositoryInterface::class, UserRepository::class);
-        
+
         $this->app->singleton(AccessTokenRepositoryInterface::class, function ($app) {
-            return $this->app->make(AccessTokenRepository::class);
+            return $this->app->make(AccessTokenRepository::class, [
+                'issuer' => url('/')
+            ]);
         });
         $this->app->singleton(BridgeAccessTokenRepository::class, function ($app) {
             return $app->make(AccessTokenRepositoryInterface::class);
@@ -85,7 +89,9 @@ class PassportServiceProvider extends LaravelPassportServiceProvider
         $this->app->singleton(ResourceServer::class, function () {
             // TODO: consider using AdvancedResourceServer
             return new ResourceServer(
-                $this->app->make(Bridge\AccessTokenRepository::class),
+                $this->app->make(Bridge\AccessTokenRepository::class, [
+                    'issuer' => url('/')
+                ]),
                 $this->makeCryptKey('public')
             );
         });
@@ -95,7 +101,9 @@ class PassportServiceProvider extends LaravelPassportServiceProvider
     {
         $server = new AuthorizationServer(
             $this->app->make(Bridge\ClientRepository::class),
-            $this->app->make(Bridge\AccessTokenRepository::class),
+            $this->app->make(Bridge\AccessTokenRepository::class, [
+                'issuer' => url('/')
+            ]),
             $this->app->make(ScopeRepository::class),
             resolve(KeyRepository::class)->getPrivateKey(),
             app('encrypter')->getKey(),
@@ -110,11 +118,16 @@ class PassportServiceProvider extends LaravelPassportServiceProvider
             new DateInterval('PT10M'),
             new DateInterval('PT10M')
         );
+
         $authCodeGrant->setIssuer(url('/'));
 
         $server->enableGrantType(
             $authCodeGrant
         );
+
+        $authCodeGrant->setAccessTokenRepository($this->app->make(AccessTokenRepository::class, [
+            'issuer' => url('/')
+        ]));
 
         $server->enableGrantType(
             new ImplicitGrant(

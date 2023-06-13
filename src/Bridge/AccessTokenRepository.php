@@ -4,19 +4,41 @@ namespace Idaas\Passport\Bridge;
 
 use Idaas\OpenID\Repositories\AccessTokenRepositoryInterface;
 use Idaas\Passport\Bridge\AccessToken;
-use Laravel\Passport\Bridge\AccessToken as BridgeAccessToken;
+use Illuminate\Contracts\Events\Dispatcher;
 use Laravel\Passport\Bridge\AccessTokenRepository as LaravelAccessTokenRepository;
 use Laravel\Passport\Bridge\Client;
 use Laravel\Passport\Bridge\Scope;
+use Laravel\Passport\TokenRepository;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
+use League\OAuth2\Server\Entities\ClientEntityInterface;
 
 class AccessTokenRepository extends LaravelAccessTokenRepository implements AccessTokenRepositoryInterface
 {
+    private string $issuer;
+
+    public function __construct(TokenRepository $tokenRepository, Dispatcher $events, string $issuer)
+    {
+        parent::__construct($tokenRepository, $events);
+
+        $this->issuer = $issuer;
+    }
+
     public function storeClaims(AccessTokenEntityInterface $token, array $claims)
     {
         $token = $this->tokenRepository->find($token->getIdentifier());
         $token->claims = $claims;
         $token->save();
+    }
+
+    public function getNewToken(ClientEntityInterface $clientEntity, array $scopes, $userIdentifier = null)
+    {
+        $accessToken = parent::getNewToken($clientEntity, $scopes, $userIdentifier);
+
+        if (method_exists($accessToken, 'setIssuer')) {
+            $accessToken->setIssuer($this->issuer);
+        }
+
+        return $accessToken;
     }
 
     public function getAccessToken($id)

@@ -1,4 +1,4 @@
-FROM php:7.4-alpine
+FROM php:8.2-alpine
 
 RUN apk add --no-cache git jq moreutils yarn
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
