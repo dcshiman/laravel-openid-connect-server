@@ -88,12 +88,6 @@ class AccessToken extends BridgeAccessToken implements AccessTokenEntityInterfac
             ->withClaim('token_use', 'access')
             ->withClaim('scopes', $this->getScopes());
 
-        if ($session = session()) {
-            $sessionId = $session->getId();
-
-            $builder = $builder->withClaim('session_id', (string) $sessionId);
-        };
-
         if (method_exists($this->oauthPrivateKey, 'getKid')) {
             $builder = $builder->withHeader('kid', $this->oauthPrivateKey->getKid());
         }
