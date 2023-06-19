@@ -5,6 +5,7 @@ namespace Idaas\Passport\Bridge;
 use DateTimeImmutable;
 use Idaas\OpenID\Encording\SecondBasedDateConversion;
 use Idaas\OpenID\Entities\AccessTokenEntityInterface;
+use Idaas\Passport\Passport;
 use Laravel\Passport\Bridge\AccessToken as BridgeAccessToken;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Encoding\ChainedFormatter;
@@ -19,6 +20,8 @@ class AccessToken extends BridgeAccessToken implements AccessTokenEntityInterfac
 
     protected $claims;
     protected ?string $issuer = null;
+
+    protected ?string $authCodeId = null;
 
     private $oauthPrivateKey;
 
@@ -42,6 +45,11 @@ class AccessToken extends BridgeAccessToken implements AccessTokenEntityInterfac
     public function setIssuer(string $issuer)
     {
         $this->issuer = $issuer;
+    }
+
+    public function setAuthCodeId(string $authCodeId)
+    {
+        $this->authCodeId = $authCodeId;
     }
 
     public function getIssuer()
@@ -80,12 +88,28 @@ class AccessToken extends BridgeAccessToken implements AccessTokenEntityInterfac
             ->withClaim('token_use', 'access')
             ->withClaim('scopes', $this->getScopes());
 
+        if ($session = session()) {
+            $sessionId = $session->getId();
+
+            $builder = $builder->withClaim('session_id', (string) $sessionId);
+        };
+
         if (method_exists($this->oauthPrivateKey, 'getKid')) {
-            $builder->withHeader('kid', $this->oauthPrivateKey->getKid());
+            $builder = $builder->withHeader('kid', $this->oauthPrivateKey->getKid());
         }
 
         if ($this->issuer) {
-            $builder->issuedBy($this->issuer);
+            $builder = $builder->issuedBy($this->issuer);
+        }
+
+        if ($this->authCodeId) {
+            $authCode = Passport::authCode()->find($this->authCodeId);
+
+            $sessionDataBagId = $authCode['session_data_bag_id'];
+
+            if ($sessionDataBagId) {
+                $builder = $builder->withClaim('session_data_bag_id', (string) $sessionDataBagId);
+            }
         }
 
         return $builder->getToken($configuration->signer(), $configuration->signingKey());

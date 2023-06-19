@@ -15,6 +15,7 @@ use League\OAuth2\Server\Entities\ClientEntityInterface;
 class AccessTokenRepository extends LaravelAccessTokenRepository implements AccessTokenRepositoryInterface
 {
     private string $issuer;
+    private ?string $authCodeId;
 
     public function __construct(TokenRepository $tokenRepository, Dispatcher $events, string $issuer)
     {
@@ -30,12 +31,20 @@ class AccessTokenRepository extends LaravelAccessTokenRepository implements Acce
         $token->save();
     }
 
+    public function setAuthCodeId($id) {
+        $this->authCodeId = $id;
+    }
+
     public function getNewToken(ClientEntityInterface $clientEntity, array $scopes, $userIdentifier = null)
     {
         $accessToken = parent::getNewToken($clientEntity, $scopes, $userIdentifier);
 
         if (method_exists($accessToken, 'setIssuer')) {
             $accessToken->setIssuer($this->issuer);
+        }
+
+        if (method_exists($accessToken, 'setAuthCodeId')) {
+            $accessToken->setAuthCodeId($this->authCodeId);
         }
 
         return $accessToken;

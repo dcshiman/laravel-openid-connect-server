@@ -13,7 +13,7 @@ class TokenGuard extends GuardsTokenGuard
         /**
          * Support for https://tools.ietf.org/id/draft-ietf-oauth-v2-bearer-00.html#body-param
          */
-        if (($access_token = $this->request->input('access_token')) != null) {
+        if (($access_token = $this->request->input('access_token')) != null && $this->request->getContentTypeFormat() == 'application/x-www-form-urlencoded') {
             $this->request->headers->set('Authorization', 'Bearer ' . $access_token);
         }
 
