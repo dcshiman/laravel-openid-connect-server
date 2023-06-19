@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55c683c37ac6ba0e1a9ce2a5d681b987",
+    "content-hash": "611a6de2d1482e475731cd7fc5fdd28c",
     "packages": [
         {
             "name": "brick/math",
@@ -2386,10 +2386,16 @@
         {
             "name": "nl.idaas/openid-server",
             "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dcshiman/openid-connect-server.git",
+                "reference": "1f3a2abfa560bcfd1986223f30472aa186d6cb01"
+            },
             "dist": {
-                "type": "path",
-                "url": "/Users/adminadmin/Development/php/openid-connect-server",
-                "reference": "32aa3592d67bc96ccf060ba0fb11389fc87e0821"
+                "type": "zip",
+                "url": "https://api.github.com/repos/dcshiman/openid-connect-server/zipball/1f3a2abfa560bcfd1986223f30472aa186d6cb01",
+                "reference": "1f3a2abfa560bcfd1986223f30472aa186d6cb01",
+                "shasum": ""
             },
             "require": {
                 "league/oauth2-server": "^8",
@@ -2399,6 +2405,7 @@
                 "laminas/laminas-diactoros": "^2.1.2",
                 "phpunit/phpunit": "^8.5"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2421,9 +2428,10 @@
                 }
             ],
             "description": "OpenID Connect server for PHP",
-            "transport-options": {
-                "relative": false
-            }
+            "support": {
+                "source": "https://github.com/dcshiman/openid-connect-server/tree/0.0.1"
+            },
+            "time": "2023-06-19T09:28:01+00:00"
         },
         {
             "name": "nunomaduro/termwind",
